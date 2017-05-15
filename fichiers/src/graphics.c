@@ -44,7 +44,7 @@ void usage (int val)
   fprintf (stderr, "\t-d\t| --debug-flags <flags>\t: enable debug messages\n");
   fprintf (stderr, "\t-d p\t|\t\t\t: step by step mode\n");
   fprintf (stderr, "\t-d t\t|\t\t\t: display computation's speed\n");
-  
+
   fprintf (stderr, "\t-v\t| --version <x>\t\t: select version <x> of algorithm\n");
   fprintf (stderr, "\t-ft\t| --first-touch\t\t: touch memory on different cores\n");
   fprintf (stderr, "\t-h\t| --help\t\t: display help\n");
@@ -101,7 +101,7 @@ static void graphics_load_surface (char *filename)
   size = MIN (old->w, old->h);
   if (DIM)
     size = MIN (DIM, size);
-  
+
   graphics_create_surface (size);
 
   // copie de old vers surface
@@ -143,14 +143,14 @@ void graphics_init (int *argc, char *argv[])
   //
   argv++; (*argc)--;
   while (*argc > 0) {
-    if (!strcmp (*argv, "--no-vsync") || !strcmp (*argv, "-nvs")) {      
+    if (!strcmp (*argv, "--no-vsync") || !strcmp (*argv, "-nvs")) {
       render_flags &= ~SDL_RENDERER_PRESENTVSYNC;
     } else if (!strcmp (*argv, "--no-display") || !strcmp (*argv, "-n")) {
       display = 0;
     } else if(!strcmp (*argv, "--help") || !strcmp (*argv, "-h")) {
       usage (0);
     } else if (!strcmp (*argv, "--first-touch") || !strcmp (*argv, "-ft")) {
-      do_first_touch = 1;  
+      do_first_touch = 1;
     } else if (!strcmp (*argv, "--alea") || !strcmp (*argv, "-a")) {
       do_random = 1;
     } else if (!strcmp (*argv, "--load-image") || !strcmp (*argv, "-li") || !strcmp (*argv, "-l")) {
@@ -258,7 +258,7 @@ void graphics_render_image (void)
 
   // Refresh texture
   if (opencl_used [version]) {
-    
+
     glFinish ();
     ocl_update_texture ();
 
@@ -273,7 +273,7 @@ void graphics_render_image (void)
 		     GL_UNSIGNED_INT_8_8_8_8,
 		     image);
   }
-  
+
   src.x = 0;
   src.y = 0;
   src.w = DIM;
@@ -288,6 +288,10 @@ void graphics_render_image (void)
   SDL_RenderCopy (ren, texture, &src, &dst);
 }
 
+Uint32 get_color(int r, int g, int b) {
+  return SDL_MapRGB(surface->format, r, g, b);
+}
+
 void graphics_refresh (void)
 {
   // On efface la scène dans le moteur de rendu (inutile !)
@@ -295,7 +299,7 @@ void graphics_refresh (void)
 
   // On réaffiche l'image
   graphics_render_image ();
-  
+
   // Met à jour l'affichage sur écran
   SDL_RenderPresent (ren);
 }
@@ -303,7 +307,7 @@ void graphics_refresh (void)
 void graphics_clean (void)
 {
   if (display) {
-    
+
     if (ren != NULL)
       SDL_DestroyRenderer (ren);
     else

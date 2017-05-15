@@ -20,11 +20,8 @@ LIB	:= lib/libvisu.a
 CFLAGS += -O3 -g -Wall -Wno-unused-function
 CFLAGS += -I./include
 
-ifdef OMP
-	CC=gcc-mp-6
-	CFLAGS += -fopenmp
-	LDFLAGS += -fopenmp
-endif
+CFLAGS += -fopenmp
+LDFLAGS += -fopenmp
 
 CFLAGS += $(shell pkg-config SDL2_image --cflags)
 LDLIBS += $(shell pkg-config SDL2_image --libs)
@@ -62,5 +59,5 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 .PHONY: clean
-clean: 
+clean:
 	rm -f prog obj/*.o deps/*.d lib/*.a

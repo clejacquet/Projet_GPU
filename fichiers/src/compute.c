@@ -21,7 +21,6 @@ void_func_t first_touch [] = {
   first_touch_v1,
   first_touch_v2,
   NULL,
-
 };
 
 int_func_t compute [] = {
@@ -45,53 +44,49 @@ unsigned opencl_used [] = {
   1,
 };
 
-///////////////////////////// Version séquentielle simple
-
-
-int count_neighbors(int i, int j) {
-  if (i != 0 && j != 0 && i != DIM-1 && j != DIM -1) {
-
-    return ((int) cur_img(j-1, i-1) != 0)
-            + ((int) cur_img(j, i-1) != 0)
-            +  ((int) cur_img(j+1, i-1) != 0)
-            + ((int) cur_img(j+1, i) != 0)
-            + ((int) cur_img(j+1, i+1) != 0)
-            + ((int) cur_img(j, i+1) != 0)
-            + ((int) cur_img(j-1, i+1) != 0)
-            + ((int) cur_img(j-1, i) != 0);
-          }
-
-    if (i == 0 && j != 0)
-    {
-      return ((int) cur_img(j+1, i) != 0)
-            + ((int) cur_img(j+1, i+1) != 0)
-            + ((int) cur_img(j, i+1) != 0)
-            + ((int) cur_img(j-1, i+1) != 0)
-            + ((int) cur_img(j-1, i) != 0);
-          }
-
-    }
+int is_alive(int i, int j) {
+  return cur_img(i, j) != 0;
 }
 
 
-unsigned compute_v0 (unsigned nb_iter)
-{
+///////////////////////////// Version séquentielle simple
+
+int count_neighbors(int i, int j) {
+  int start_x = (i == 0) ? i : i - 1;
+  int start_y = (j == 0) ? j : j - 1;
+  int end_x = (i == DIM - 1) ? i : i + 1;
+  int end_y = (j == DIM - 1) ? j : j + 1;
+
+  int sum = 0;
+
+  for (int x = start_x; x <= end_x ; x++) {
+    for (int y = start_y; y <= end_y ; y++) {
+      if (x != i || y != j) {
+        sum += is_alive(x, y);
+      }
+    }
+  }
+
+  return sum;
+}
+
+unsigned compute_v0 (unsigned nb_iter) {
 
   for (unsigned it = 1; it <= nb_iter; it ++) {
-    for (int i = 0; i < DIM; i++)
-      for (int j = 0; j < DIM; j++)
-
-       int nb_neighbor = count_neighbors(i, j);
+    for (int i = 0; i < DIM; i++) {
+      for (int j = 0; j < DIM; j++) {
+        int nb_neighbor = count_neighbors(i, j);
         if (nb_neighbor < 2 || nb_neighbor > 3)
-            next_img (i, j) = 0;
+          next_img (i, j) = 0;
         else if (nb_neighbor == 2 && cur_img(i, j) != 0)
-            next_img(i, j) = cur_img(i, j);
+          next_img(i, j) = cur_img(i, j);
         else if (nb_neighbor == 3)
-            next_img(i, j) = 1;
-
-	      //next_img (i, j) = cur_img (j, i);
-
-        swap_images ();
+          next_img(i, j) = get_color(255,0,255);
+        else
+          next_img (i, j) = 0;
+     }
+    }
+    swap_images ();
   }
   // retourne le nombre d'étapes nécessaires à la
   // stabilisation du calcul ou bien 0 si le calcul n'est pas
@@ -99,12 +94,6 @@ unsigned compute_v0 (unsigned nb_iter)
   return 0;
 }
 
-
-  // retourne le nombre d'étapes nécessaires à la
-  // stabilisation du calcul ou bien 0 si le calcul n'est pas
-  // stabilisé au bout des nb_iter itérations
-  return 0;
-}
 
 ///////////////////////////// Version OpenMP de base
 
@@ -114,14 +103,31 @@ void first_touch_v1 ()
 
 #pragma omp parallel for
   for(i=0; i<DIM ; i++) {
-    for(j=0; j < DIM ; j += 512)
-      next_img(i, j) = cur_img (i, j) = 0 ;
+    for(j=0; j < DIM ; j += 512) {
+      next_img (i, j) = cur_img (i, j) = 0 ;
+    }
   }
 }
 
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
-unsigned compute_v1(unsigned nb_iter)
-{
+unsigned compute_v1(unsigned nb_iter) {
+  #pragma omp parallel for
+  for (unsigned it = 1; it <= nb_iter; it ++) {
+    for (int i = 0; i < DIM; i++) {
+      for (int j = 0; j < DIM; j++) {
+        int nb_neighbor = count_neighbors(i, j);
+        if (nb_neighbor < 2 || nb_neighbor > 3)
+          next_img (i, j) = 0;
+        else if (nb_neighbor == 2 && cur_img(i, j) != 0)
+          next_img(i, j) = cur_img(i, j);
+        else if (nb_neighbor == 3)
+          next_img(i, j) = get_color(255,0,255);
+        else
+          next_img (i, j) = 0;
+     }
+    }
+    swap_images ();
+  }
   return 0;
 }
 
