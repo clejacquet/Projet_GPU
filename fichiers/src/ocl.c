@@ -35,7 +35,7 @@ unsigned TILEX = 16;
 unsigned TILEY = 16;
 unsigned SIZE = 0;
 
-static char *kernel_name = "scrollup";
+static char *kernel_name = "transpose";
 
 cl_int err;
 cl_context context;
@@ -138,8 +138,12 @@ void ocl_init (void)
     TILEY = TILEX;
 
   str = getenv ("KERNEL");
-  if (str != NULL)
+  if (str != NULL) {
     kernel_name = str;
+    printf("FOUND: %s\n", str);
+  } else {
+    printf("NOT FOUND: %s\n", kernel_name);
+  }
 
   if (SIZE > DIM)
     exit_with_error ("SIZE (%d) cannot exceed DIM (%d)", SIZE, DIM);

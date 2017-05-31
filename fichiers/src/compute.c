@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 
+unsigned TILE = 32;
 unsigned version = 0;
 
 void first_touch_v1 (void);
