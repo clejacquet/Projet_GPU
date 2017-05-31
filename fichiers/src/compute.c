@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 
+unsigned TILE = 32;
 unsigned version = 0;
 
 void first_touch_v1 (void);
@@ -15,6 +16,11 @@ unsigned compute_v0 (unsigned nb_iter);
 unsigned compute_v1 (unsigned nb_iter);
 unsigned compute_v2 (unsigned nb_iter);
 unsigned compute_v3 (unsigned nb_iter);
+unsigned compute_v4 (unsigned nb_iter);
+unsigned compute_v5 (unsigned nb_iter);
+unsigned compute_v6 (unsigned nb_iter);
+unsigned compute_v7 (unsigned nb_iter);
+unsigned compute_v8 (unsigned nb_iter);
 
 void_func_t first_touch [] = {
   NULL,
@@ -27,7 +33,7 @@ int_func_t compute [] = {
   compute_v0,
   compute_v1,
   compute_v2,
-  compute_v3,
+  compute_v8,
 };
 
 char *version_name [] = {

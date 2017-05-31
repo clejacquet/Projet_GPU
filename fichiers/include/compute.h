@@ -12,5 +12,4 @@ extern unsigned opencl_used [];
 
 extern unsigned version;
 
-
 #endif
