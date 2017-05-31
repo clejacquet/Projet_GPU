@@ -9,6 +9,7 @@ extern void_func_t first_touch [];
 extern int_func_t compute [];
 extern char *version_name [];
 extern unsigned opencl_used [];
+extern const char* opencl_kernel_names[];
 
 extern unsigned version;
 

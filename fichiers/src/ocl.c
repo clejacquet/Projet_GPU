@@ -19,6 +19,7 @@
 #include "ocl.h"
 #include "graphics.h"
 #include "debug.h"
+#include "compute.h"
 
 #define check(err, ...)					\
   do {							\
@@ -35,7 +36,7 @@ unsigned TILEX = 16;
 unsigned TILEY = 16;
 unsigned SIZE = 0;
 
-static char *kernel_name = "compute";
+static const char *kernel_name = "compute";
 
 cl_int err;
 cl_context context;
@@ -140,7 +141,10 @@ void ocl_init (void)
   str = getenv ("KERNEL");
   if (str != NULL) {
     kernel_name = str;
-    printf("FOUND: %s\n", str);
+    printf("ENV: %s\n", kernel_name);
+  } else if (opencl_kernel_names[version] != NULL) {
+    kernel_name = opencl_kernel_names[version];
+    printf("FOUND: %s\n", kernel_name);
   } else {
     printf("NOT FOUND: %s\n", kernel_name);
   }
@@ -157,7 +161,7 @@ void ocl_init (void)
 
   if (platform_no >= nb_platforms)
     exit_with_error ("Platform number #%d too high\n", platform_no);
-    
+
   err = clGetPlatformInfo (pf [platform_no], CL_PLATFORM_NAME, 1024, name, NULL);
   check (err, "Failed to get Platform Info");
 
@@ -181,7 +185,7 @@ void ocl_init (void)
 
   err = clGetDeviceInfo (devices [dev], CL_DEVICE_NAME, 1024, name, NULL);
   check (err, "Cannot get type of device");
-    
+
   err = clGetDeviceInfo (devices [dev], CL_DEVICE_TYPE, sizeof (cl_device_type), &dtype, NULL);
   check (err, "Cannot get type of device");
 
@@ -207,9 +211,9 @@ void ocl_init (void)
     };
 #endif
 
-    context = clCreateContext (properties, 1, &devices [dev], NULL, NULL, &err); 
+    context = clCreateContext (properties, 1, &devices [dev], NULL, NULL, &err);
   } else
-    context = clCreateContext (NULL, 1, &devices [dev], NULL, NULL, &err); 
+    context = clCreateContext (NULL, 1, &devices [dev], NULL, NULL, &err);
 
   check (err, "Failed to create compute context");
 
@@ -259,7 +263,7 @@ void ocl_init (void)
   check (err, "Failed to create compute kernel");
 
   printf ("Using kernel: %s\n", kernel_name);
-  
+
   update_kernel = clCreateKernel (program, "update_texture", &err);
   check (err, "Failed to create compute kernel");
 
@@ -310,7 +314,7 @@ unsigned ocl_compute (unsigned nb_iter)
   size_t local[2]  = { TILEX, TILEY };  // local domain size for our calculation
 
   for (unsigned it = 1; it <= nb_iter; it ++) {
-    
+
     // Set kernel arguments
     //
     err = 0;

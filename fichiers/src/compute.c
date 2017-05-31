@@ -9,9 +9,6 @@
 unsigned TILE = 32;
 unsigned version = 0;
 
-void first_touch_v1 (void);
-void first_touch_v2 (void);
-
 unsigned compute_v0 (unsigned nb_iter);
 unsigned compute_v1 (unsigned nb_iter);
 unsigned compute_v2 (unsigned nb_iter);
@@ -21,11 +18,17 @@ unsigned compute_v5 (unsigned nb_iter);
 unsigned compute_v6 (unsigned nb_iter);
 unsigned compute_v7 (unsigned nb_iter);
 unsigned compute_v8 (unsigned nb_iter);
+unsigned compute_v9 (unsigned nb_iter);
 
 void_func_t first_touch [] = {
   NULL,
-  first_touch_v1,
-  first_touch_v2,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
   NULL,
 };
 
@@ -33,21 +36,52 @@ int_func_t compute [] = {
   compute_v0,
   compute_v1,
   compute_v2,
+  compute_v3,
+  compute_v4,
+  compute_v5,
+  compute_v6,
+  compute_v7,
   compute_v8,
+  compute_v9,
 };
 
 char *version_name [] = {
   "Séquentielle",
+  "Séquentielle Tuilée",
+  "Séquentielle Tuilée Optimisée",
   "OpenMP",
-  "OpenMP zone",
+  "OpenMP Tuilée",
+  "OpenMP Tuilée Optimisée",
+  "OpenMP Task Tuilée",
+  "OpenMP Task Tuilée Optimisée",
   "OpenCL",
+  "OpenCL Optimisée",
 };
 
 unsigned opencl_used [] = {
   0,
   0,
   0,
+  0,
+  0,
+  0,
+  0,
+  0,
   1,
+  1,
+};
+
+const char* opencl_kernel_names [] = {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "compute_naif",
+    "compute"
 };
 
 int is_alive(int i, int j) {
@@ -132,17 +166,16 @@ unsigned compute_v1 (unsigned nb_iter) {
 
 unsigned compute_v2(unsigned nb_iter) {
 	
-	float nb = DIM*1.0 / TILE;
+	float nb = DIM * 1.0f / TILE;
 	int nb_tiles;
 	if (nb - (int)nb > 0)
 		nb_tiles = (int)nb + 1;
 	else
 		nb_tiles = (int) nb;
 
-	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+	bool tile_changed[nb_tiles][nb_tiles];
 
 	for (int i = 0; i < nb_tiles; ++i) {
-		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
 		for (int j = 0; j < nb_tiles; ++j) {
 			tile_changed[i][j] = true;
 		}
@@ -158,6 +191,10 @@ unsigned compute_v2(unsigned nb_iter) {
 					tile_changed[x_tile][y_tile] = false;
 					unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
 					unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+
+                    unsigned end_tile_i = end_i; //TODO - Valeur par défaut, à changer
+                    unsigned end_tile_j = end_j; //TODO - Valeur par défaut, à changer
+
 					for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
 						for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
 							if (change_color(i_tile, j_tile)) {
@@ -190,18 +227,6 @@ unsigned compute_v2(unsigned nb_iter) {
 
 ///////////////////////////// Version OpenMP for de base
 
-void first_touch_v1 ()
-{
-  int i,j ;
-
- #pragma omp parallel for
-  for(i=0; i<DIM ; i++) {
-    for(j=0; j < DIM ; j += 512) {
-      next_img (i, j) = cur_img (i, j) = 0 ;
-    }
-  }
-}
-
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
 
 unsigned compute_v3(unsigned nb_iter) {
@@ -218,11 +243,6 @@ unsigned compute_v3(unsigned nb_iter) {
 }
 
 ///////////////////////////// Version OpenMP for tuilée
-
-void first_touch_v2 ()
-{
-
-}
 
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
 
@@ -253,18 +273,17 @@ unsigned compute_v4(unsigned nb_iter)
 
 unsigned compute_v5(unsigned nb_iter)
 {
-	float nb = DIM*1.0 / TILE;
+	float nb = DIM * 1.0f / TILE;
 	int nb_tiles;
 	if (nb - (int)nb > 0)
 		nb_tiles = (int)nb + 1;
 	else
 		nb_tiles = (int)nb;
 
-	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+	bool tile_changed[nb_tiles][nb_tiles];
 
 	#pragma omp parallel for schedule(static)
 	for (int i = 0; i < nb_tiles; ++i) {
-		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
 		for (int j = 0; j < nb_tiles; ++j) {
 			tile_changed[i][j] = true;
 		}
@@ -280,6 +299,10 @@ unsigned compute_v5(unsigned nb_iter)
 					tile_changed[x_tile][y_tile] = false;
 					unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
 					unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+
+                    unsigned end_tile_i = end_i; //TODO - Valeur par défaut, à changer
+                    unsigned end_tile_j = end_j; //TODO - Valeur par défaut, à changer
+
 					for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
 						for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
 							if (change_color(i_tile, j_tile)) {
@@ -336,18 +359,17 @@ unsigned compute_v6(unsigned nb_iter) {
 
 unsigned compute_v7(unsigned nb_iter)
 {
-	float nb = DIM*1.0 / TILE;
+	float nb = DIM * 1.0f / TILE;
 	int nb_tiles;
 	if (nb - (int)nb > 0)
 		nb_tiles = (int)nb + 1;
 	else
 		nb_tiles = (int)nb;
 
-	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+	bool tile_changed[nb_tiles][nb_tiles];
 
 	#pragma omp parallel for schedule(static)
 	for (int i = 0; i < nb_tiles; ++i) {
-		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
 		for (int j = 0; j < nb_tiles; ++j) {
 			tile_changed[i][j] = true;
 		}
@@ -366,6 +388,10 @@ unsigned compute_v7(unsigned nb_iter)
 						tile_changed[x_tile][y_tile] = false;
 						unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
 						unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+
+                        unsigned end_tile_i = end_i; //TODO - Valeur par défaut, à changer
+                        unsigned end_tile_j = end_j; //TODO - Valeur par défaut, à changer
+
 						for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
 							for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
 								if (change_color(i_tile, j_tile)) {
@@ -399,14 +425,12 @@ unsigned compute_v7(unsigned nb_iter)
 ///////////////////////////// Version OpenCL de base
 
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
-unsigned compute_v8 (unsigned nb_iter)
-{
-  return ocl_compute (nb_iter);
+unsigned compute_v8 (unsigned nb_iter) {
+    return ocl_compute(nb_iter);
 }
 
 ///////////////////////////// Version OpenCL optimisée
 
 unsigned compute_v9(unsigned nb_iter) {
-
-	return 0;
+	return ocl_compute(nb_iter);
 }
