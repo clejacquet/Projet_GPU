@@ -68,7 +68,8 @@ int count_neighbors(int i, int j) {
 	return sum;
 }
 
-void change_color(int i, int j) {
+bool change_color(int i, int j) {
+	int state_before = cur_img(i, j);
 	int nb_neighbor = count_neighbors(i, j);
 	if (nb_neighbor < 2 || nb_neighbor > 3)
 		next_img(i, j) = 0;
@@ -78,6 +79,8 @@ void change_color(int i, int j) {
 		next_img(i, j) = get_color(255, 0, 255);
 	else
 		next_img(i, j) = 0;
+
+	return (state_before != cur_img(i, j));
 
 }
 
@@ -122,7 +125,60 @@ unsigned compute_v1 (unsigned nb_iter) {
 ///////////////////////////// Version séquentielle optimisée
 
 unsigned compute_v2(unsigned nb_iter) {
+	
+	float nb = DIM*1.0 / TILE;
+	int nb_tiles;
+	if (nb - (int)nb > 0)
+		nb_tiles = (int)nb + 1;
+	else
+		nb_tiles = (int) nb;
 
+	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+
+	for (int i = 0; i < nb_tiles; ++i) {
+		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
+		for (int j = 0; j < nb_tiles; ++j) {
+			tile_changed[i][j] = true;
+		}
+	}
+
+	for (unsigned it = 1; it <= nb_iter; ++it) {
+
+		for (unsigned i = 1; i < DIM - 1; i += TILE) {
+			for (unsigned j = 1; j < DIM - 1; j += TILE) {
+				unsigned x_tile = (i - 1) / TILE;
+				unsigned y_tile = (j - 1) / TILE;
+				if (tile_changed[x_tile][y_tile]) {
+					tile_changed[x_tile][y_tile] = false;
+					unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
+					unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+					for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
+						for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
+							if (change_color(i_tile, j_tile)) {
+
+								tile_changed[x_tile][y_tile] = true;
+
+								if (i_tile == i && x_tile != 0) { 								// en haut
+									tile_changed[x_tile - 1][y_tile] = true;
+								}
+								else if (i_tile == end_tile_i - 1 && x_tile != nb_tiles - 1) { 	// en bas
+									tile_changed[x_tile + 1][y_tile] = true;
+								}
+
+								if (j_tile == j && y_tile != 0) { 								//a gauche
+									tile_changed[x_tile][y_tile - 1] = true;
+								}
+								else if (j_tile == end_tile_j - 1 && y_tile != nb_tiles - 1) { 	//a droite (ces soirées là)
+									tile_changed[x_tile][y_tile + 1] = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		swap_images();
+	}
 	return 0;
 }
 
@@ -167,7 +223,7 @@ void first_touch_v2 ()
 unsigned compute_v4(unsigned nb_iter)
 {
 	for (unsigned it = 1; it <= nb_iter; ++it) {
-		#pragma omp parallel for //TODO : collapse(2) schedule(static) ??
+		#pragma omp parallel for //TODO : collapse et schedule ?
 		for (unsigned i = 0; i < DIM - 1; i += TILE) {
 			for (unsigned j = 0; j < DIM - 1; j += TILE) {
 				unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
@@ -188,11 +244,64 @@ unsigned compute_v4(unsigned nb_iter)
 
 ///////////////////////////// Version OpenMP for optimisée
 
-unsigned compute_v5(unsigned nb_iter) {
 
+unsigned compute_v5(unsigned nb_iter)
+{
+	float nb = DIM*1.0 / TILE;
+	int nb_tiles;
+	if (nb - (int)nb > 0)
+		nb_tiles = (int)nb + 1;
+	else
+		nb_tiles = (int)nb;
+
+	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+
+	#pragma omp parallel for schedule(static)
+	for (int i = 0; i < nb_tiles; ++i) {
+		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
+		for (int j = 0; j < nb_tiles; ++j) {
+			tile_changed[i][j] = true;
+		}
+	}
+	
+	for (unsigned it = 1; it <= nb_iter; ++it) {
+		#pragma omp parallel for // TODO : collapse et schedule ?
+		for (unsigned i = 1; i < DIM - 1; i += TILE) {
+			for (unsigned j = 1; j < DIM - 1; j += TILE) {
+				unsigned x_tile = (i - 1) / TILE;
+				unsigned y_tile = (j - 1) / TILE;
+				if (tile_changed[x_tile][y_tile]) {
+					tile_changed[x_tile][y_tile] = false;
+					unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
+					unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+					for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
+						for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
+							if (change_color(i_tile, j_tile)) {
+								tile_changed[x_tile][y_tile] = true;
+
+								if (i_tile == i && x_tile != 0) { 								// en haut
+									tile_changed[x_tile - 1][y_tile] = true;
+								}
+								else if (i_tile == end_tile_i - 1 && x_tile != nb_tiles - 1) { 	// en bas
+									tile_changed[x_tile + 1][y_tile] = true;
+								}
+
+								if (j_tile == j && y_tile != 0) { 								//a gauche
+									tile_changed[x_tile][y_tile - 1] = true;
+								}
+								else if (j_tile == end_tile_j - 1 && y_tile != nb_tiles - 1) { 	//a droite
+									tile_changed[x_tile][y_tile + 1] = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		swap_images();
+	}
 	return 0;
 }
-
 
 ///////////////////////////// Version OpenMP task tuilée
 
@@ -219,7 +328,64 @@ unsigned compute_v6(unsigned nb_iter) {
 
 ///////////////////////////// Version OpenMP task optimisée
 
-unsigned compute_v7(unsigned nb_iter) {
+unsigned compute_v7(unsigned nb_iter)
+{
+	float nb = DIM*1.0 / TILE;
+	int nb_tiles;
+	if (nb - (int)nb > 0)
+		nb_tiles = (int)nb + 1;
+	else
+		nb_tiles = (int)nb;
+
+	bool * tile_changed = malloc(sizeof(bool*)*nb_tiles);
+
+	#pragma omp parallel for schedule(static)
+	for (int i = 0; i < nb_tiles; ++i) {
+		tile_changed[i] = malloc(sizeof(bool)*nb_tiles);
+		for (int j = 0; j < nb_tiles; ++j) {
+			tile_changed[i][j] = true;
+		}
+	}
+
+	for (unsigned it = 1; it <= nb_iter; ++it) {
+		#pragma omp parallel
+		for (unsigned i = 1; i < DIM - 1; i += TILE)
+			for (unsigned j = 1; j < DIM - 1; j += TILE) {
+				unsigned x_tile = (i - 1) / TILE;
+				unsigned y_tile = (j - 1) / TILE;
+				if (tile_changed[x_tile][y_tile]) {
+				#pragma omp single nowait
+				#pragma omp task //TODO shared ou local les variables ?
+					{
+						tile_changed[x_tile][y_tile] = false;
+						unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
+						unsigned end_j = j + TILE < DIM - 1 ? j + TILE : DIM - 1;
+						for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
+							for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
+								if (change_color(i_tile, j_tile)) {
+									tile_changed[x_tile][y_tile] = true;
+
+									if (i_tile == i && x_tile != 0) { 								// en haut
+										tile_changed[x_tile - 1][y_tile] = true;
+									}
+									else if (i_tile == end_tile_i - 1 && x_tile != nb_tiles - 1) { 	// en bas
+										tile_changed[x_tile + 1][y_tile] = true;
+									}
+
+									if (j_tile == j && y_tile != 0) { 								//a gauche
+										tile_changed[x_tile][y_tile - 1] = true;
+									}
+									else if (j_tile == end_tile_j - 1 && y_tile != nb_tiles - 1) { 	//a droite
+										tile_changed[x_tile][y_tile + 1] = true;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		swap_images();
+	}
 
 	return 0;
 }
