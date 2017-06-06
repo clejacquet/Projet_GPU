@@ -6,7 +6,7 @@ if [ $# == 0 ]
 then
   iter=1000
 else
-  iter=$0
+  iter=$1
 fi
 
 ITE=$(seq 10) # nombre de mesures
@@ -18,6 +18,7 @@ PARAM="-n -s 128 -a -i $iter" # parametres commun à toutes les executions
 execute (){
   EXE="./prog $* $PARAM"
   OUTPUT="$(echo $EXE | tr -d ' ')"
+  echo $OUTPUT
   for nb in $ITE
   do
     for OMP_NUM_THREADS in $THREADS
