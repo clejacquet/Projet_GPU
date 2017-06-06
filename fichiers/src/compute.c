@@ -209,7 +209,6 @@ unsigned compute_v2(unsigned nb_iter) {
     int nb_tiles = (int) ceil(DIM * 1.0f / TILE);
 
     for (unsigned it = 1; it <= nb_iter; ++it) {
-
         for (unsigned i = 0; i < DIM; i += TILE) {
             for (unsigned j = 0; j < DIM; j += TILE) {
                 unsigned x_tile = i / TILE;
@@ -225,43 +224,18 @@ unsigned compute_v2(unsigned nb_iter) {
                     for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
                         for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
                             if (change_color(i_tile, j_tile)) {
-
                                 tile_next[x_tile * nb_tiles + y_tile] = true;
 
-                                if (i_tile == i && x_tile != 0) {                                // a gauche
-                                    if (y_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                    tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
-                                    if (y_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
-                                } else if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    // a droite
-                                    if (y_tile > 0) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
+                                if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    //bas
                                     tile_next[(x_tile + 1) * nb_tiles + y_tile] = true;
-                                    if (y_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                } else if (i_tile == i && x_tile != 0) {                //haut
+                                    tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
                                 }
 
-                                if (j_tile == j && y_tile != 0) {                                // en haut
-                                    if (x_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                    tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
-                                    if (x_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                } else if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    // en bas (ces soirées là)
-                                    if (x_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    //droite
                                     tile_next[x_tile * nb_tiles + (y_tile + 1)] = true;
-                                    if (x_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                } else if (j_tile == j && y_tile != 0) {                //gauche
+                                    tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
                                 }
                             }
                         }
@@ -300,7 +274,7 @@ unsigned compute_v3(unsigned nb_iter) {
 
 unsigned compute_v4(unsigned nb_iter) {
     for (unsigned it = 1; it <= nb_iter; ++it) {
-        #pragma omp parallel for collapse(2) //TODO : collapse et schedule ?
+        #pragma omp parallel for collapse(2) schedule(static)
         for (unsigned i = 0; i < DIM - 1; i += TILE) {
             for (unsigned j = 0; j < DIM - 1; j += TILE) {
                 unsigned end_i = i + TILE < DIM - 1 ? i + TILE : DIM - 1;
@@ -327,7 +301,7 @@ unsigned compute_v5(unsigned nb_iter) {
 
     for (unsigned it = 1; it <= nb_iter; ++it) {
 
-        #pragma omp parallel for collapse(2) // TODO : collapse et schedule ?
+        #pragma omp parallel for collapse(2) schedule(static)
         for (unsigned i = 0; i < DIM; i += TILE) {
             for (unsigned j = 0; j < DIM; j += TILE) {
                 unsigned x_tile = i / TILE;
@@ -343,43 +317,18 @@ unsigned compute_v5(unsigned nb_iter) {
                     for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
                         for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
                             if (change_color(i_tile, j_tile)) {
-
                                 tile_next[x_tile * nb_tiles + y_tile] = true;
 
-                                if (i_tile == i && x_tile != 0) {                                // a gauche
-                                    if (y_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                    tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
-                                    if (y_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
-                                } else if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    // a droite
-                                    if (y_tile > 0) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
+                                if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    //bas
                                     tile_next[(x_tile + 1) * nb_tiles + y_tile] = true;
-                                    if (y_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                } else if (i_tile == i && x_tile != 0) {                //haut
+                                    tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
                                 }
 
-                                if (j_tile == j && y_tile != 0) {                                // en haut
-                                    if (x_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                    tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
-                                    if (x_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                    }
-                                } else if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    // en bas (ces soirées là)
-                                    if (x_tile > 0) {
-                                        tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    //droite
                                     tile_next[x_tile * nb_tiles + (y_tile + 1)] = true;
-                                    if (x_tile < nb_tiles - 1) {
-                                        tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                    }
+                                } else if (j_tile == j && y_tile != 0) {                //gauche
+                                    tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
                                 }
                             }
                         }
@@ -425,60 +374,33 @@ unsigned compute_v7(unsigned nb_iter) {
 
     for (unsigned it = 1; it <= nb_iter; ++it) {
         #pragma omp parallel
-        for (unsigned i = 0; i < DIM; i += TILE) {
+        for (unsigned i = 0; i < DIM; i += TILE)
             for (unsigned j = 0; j < DIM; j += TILE) {
                 unsigned x_tile = i / TILE;
                 unsigned y_tile = j / TILE;
+                if (tile_curr[x_tile * nb_tiles + y_tile]){
+                    #pragma omp single nowait
+                    #pragma omp task
+                    {
+                        tile_next[x_tile * nb_tiles + y_tile] = false;
+                        unsigned end_i = i + TILE < DIM ? i + TILE : DIM;
+                        unsigned end_j = j + TILE < DIM ? j + TILE : DIM;
 
-                // Si la tuile a changé à l'itération précédente alors on la recalcule
-                if (tile_curr[x_tile * nb_tiles + y_tile]) {
-                    tile_next[x_tile * nb_tiles + y_tile] = false;
-
-                    unsigned end_i = i + TILE < DIM ? i + TILE : DIM;
-                    unsigned end_j = j + TILE < DIM ? j + TILE : DIM;
-
-                    for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
-                        for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
-                            if (change_color(i_tile, j_tile)) {
-                                #pragma omp single nowait
-                                #pragma omp task //TODO shared ou local les variables ?
-                                {
+                        for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
+                            for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
+                                if (change_color(i_tile, j_tile)) {
                                     tile_next[x_tile * nb_tiles + y_tile] = true;
 
-                                    if (i_tile == i && x_tile != 0) {                                // a gauche
-                                        if (y_tile > 0) {
-                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                        }
-                                        tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
-                                        if (y_tile < nb_tiles - 1) {
-                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                        }
-                                    } else if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    // a droite
-                                        if (y_tile > 0) {
-                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                        }
+                                    if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    //bas
                                         tile_next[(x_tile + 1) * nb_tiles + y_tile] = true;
-                                        if (y_tile < nb_tiles - 1) {
-                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                        }
+                                    } else if (i_tile == i && x_tile != 0) {                //haut
+                                        tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
                                     }
 
-                                    if (j_tile == j && y_tile != 0) {                                // en haut
-                                        if (x_tile > 0) {
-                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
-                                        }
-                                        tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
-                                        if (x_tile < nb_tiles - 1) {
-                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
-                                        }
-                                    } else if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    // en bas (ces soirées là)
-                                        if (x_tile > 0) {
-                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
-                                        }
+                                    if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    //droite
                                         tile_next[x_tile * nb_tiles + (y_tile + 1)] = true;
-                                        if (x_tile < nb_tiles - 1) {
-                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
-                                        }
+                                    } else if (j_tile == j && y_tile != 0) {                //gauche
+                                        tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
                                     }
                                 }
                             }
@@ -486,12 +408,86 @@ unsigned compute_v7(unsigned nb_iter) {
                     }
                 }
             }
-        }
-        swap_images();
+        swap_images ();
         bool* tmp = tile_curr;
         tile_curr = tile_next;
         tile_next = tmp;
     }
+
+//
+//
+//
+//
+//    for (unsigned it = 1; it <= nb_iter; ++it) {
+//        #pragma omp parallel
+//        for (unsigned i = 0; i < DIM; i += TILE) {
+//            for (unsigned j = 0; j < DIM; j += TILE) {
+//                unsigned x_tile = i / TILE;
+//                unsigned y_tile = j / TILE;
+//
+//                // Si la tuile a changé à l'itération précédente alors on la recalcule
+//                if (tile_curr[x_tile * nb_tiles + y_tile]) {
+//                    tile_next[x_tile * nb_tiles + y_tile] = false;
+//
+//                    unsigned end_i = i + TILE < DIM ? i + TILE : DIM;
+//                    unsigned end_j = j + TILE < DIM ? j + TILE : DIM;
+//
+//                    for (unsigned i_tile = i; i_tile < end_i; ++i_tile) {
+//                        for (unsigned j_tile = j; j_tile < end_j; ++j_tile) {
+//                            if (change_color(i_tile, j_tile)) {
+//                                #pragma omp single nowait
+//                                #pragma omp task
+//                                {
+//                                    tile_next[x_tile * nb_tiles + y_tile] = true;
+//
+//                                    if (i_tile == i && x_tile != 0) {                                // a gauche
+//                                        if (y_tile > 0) {
+//                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
+//                                        }
+//                                        tile_next[(x_tile - 1) * nb_tiles + y_tile] = true;
+//                                        if (y_tile < nb_tiles - 1) {
+//                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
+//                                        }
+//                                    } else if (i_tile == end_i - 1 && x_tile != nb_tiles - 1) {    // a droite
+//                                        if (y_tile > 0) {
+//                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
+//                                        }
+//                                        tile_next[(x_tile + 1) * nb_tiles + y_tile] = true;
+//                                        if (y_tile < nb_tiles - 1) {
+//                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
+//                                        }
+//                                    }
+//
+//                                    if (j_tile == j && y_tile != 0) {                                // en haut
+//                                        if (x_tile > 0) {
+//                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile - 1)] = true;
+//                                        }
+//                                        tile_next[x_tile * nb_tiles + (y_tile - 1)] = true;
+//                                        if (x_tile < nb_tiles - 1) {
+//                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile - 1)] = true;
+//                                        }
+//                                    } else if (j_tile == end_j - 1 && y_tile != nb_tiles - 1) {    // en bas (ces soirées là)
+//                                        if (x_tile > 0) {
+//                                            tile_next[(x_tile - 1) * nb_tiles + (y_tile + 1)] = true;
+//                                        }
+//                                        tile_next[x_tile * nb_tiles + (y_tile + 1)] = true;
+//                                        if (x_tile < nb_tiles - 1) {
+//                                            tile_next[(x_tile + 1) * nb_tiles + (y_tile + 1)] = true;
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//                    }
+//                }
+//            }
+//        }
+//        swap_images();
+//        bool* tmp = tile_curr;
+//        tile_curr = tile_next;
+//        tile_next = tmp;
+//    }
 
     return 0;
 }
