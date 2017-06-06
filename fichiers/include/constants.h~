@@ -12,7 +12,7 @@
 #define MAX_DIM 16384
 #define DEFAULT_DIM 2048
 
-#define TILE 32
+#define TILE 128
 
 
 #endif
