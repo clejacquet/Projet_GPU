@@ -8,9 +8,10 @@ void ocl_init (void);
 void ocl_map_textures (GLuint texid);
 void ocl_send_image (unsigned *image);
 unsigned ocl_compute (unsigned nb_iter);
+unsigned ocl_compute_with_tiles (unsigned nb_iter);
 void ocl_wait (void);
 void ocl_update_texture (void);
 
-extern unsigned SIZE, TILE;
+extern unsigned SIZE;
 
 #endif

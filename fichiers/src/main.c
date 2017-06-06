@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
         ocl_send_image(image);
     }
 
+    init_changed_tiles();
+
     if (graphics_display_enabled()) {
         // version graphique
 
